@@ -1,0 +1,32 @@
+{
+  "nodes": [
+    {
+      "id": "garden-intro",
+      "title": "Cos'e un Digital Garden",
+      "url": "/notes/cos-e-un-digital-garden/",
+      "stage": "learning 🧩"
+    },
+    {
+      "id": "til-astro-collections",
+      "title": "TIL Astro Content Collections",
+      "url": "/til/2026-03-01-til-astro-content-collections/",
+      "stage": "raw 🗂️"
+    },
+    {
+      "id": "backlinks-concetto",
+      "title": "Backlinks e Wikilink",
+      "url": "/notes/backlinks-e-wikilink/",
+      "stage": "fine-tuned 🧠"
+    }
+  ],
+  "links": [
+    {
+      "source": "garden-intro",
+      "target": "backlinks-concetto"
+    },
+    {
+      "source": "til-astro-collections",
+      "target": "garden-intro"
+    }
+  ]
+}
