@@ -25,7 +25,28 @@ export default defineConfig({
   ],
   markdown: {
     remarkPlugins: [
-      [remarkWikiLink, { aliasDivider: "|" }],
+      [
+        remarkWikiLink,
+        {
+          aliasDivider: "|",
+          linkTemplate: ({
+            slug,
+            permalink,
+            alias,
+          }: {
+            slug: string;
+            permalink: string | null;
+            alias: string | null;
+          }) => {
+            const href = `/Digital-Garden/notes/${permalink || slug}`;
+            return {
+              hName: "a",
+              hProperties: { href },
+              hChildren: [{ type: "text", value: alias || slug }],
+            };
+          },
+        },
+      ],
       remarkToc,
       [remarkCollapse, { test: "Table of contents" }],
     ],
