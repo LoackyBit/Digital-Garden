@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from "astro:content";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import StageTag from "@/components/StageTag.astro";
+import Layout from "@/layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("til", entry => !entry.data.draft);
+
+  return entries.map(entry => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Layout
+  title={`${entry.data.title} | TIL`}
+  description={entry.data.summary ?? "Today I Learned"}
+>
+  <Header />
+  <main class="app-layout py-8">
+    <article class="app-prose max-w-app">
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <h1 class="m-0 text-3xl font-bold text-accent">{entry.data.title}</h1>
+        <StageTag stage={entry.data.stage} />
+      </div>
+
+      <p class="text-sm text-foreground/75">
+        {entry.data.date.toLocaleDateString("it-IT")}
+      </p>
+
+      <ul class="mt-2 flex flex-wrap gap-2 p-0">
+        {entry.data.tags.map(tag => (
+          <li class="list-none rounded-full border border-border px-2 py-0.5 text-xs">#{tag}</li>
+        ))}
+      </ul>
+
+      <hr class="my-6 border-dashed" />
+      <Content />
+    </article>
+  </main>
+  <Footer />
+</Layout>

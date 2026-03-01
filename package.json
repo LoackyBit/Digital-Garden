@@ -8,17 +8,22 @@
     "preview": "astro preview",
     "sync": "astro sync",
     "astro": "astro",
+    "new-til": "tsx scripts/new-til.ts",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@astrojs/mdx": "^4.3.3",
     "@astrojs/rss": "^4.0.14",
     "@astrojs/sitemap": "^3.6.0",
+    "@braindb/core": "^0.0.17",
+    "@braindb/remark-wiki-link": "^2.1.0",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
     "dayjs": "^1.11.19",
+    "d3": "^7.9.0",
     "lodash.kebabcase": "^4.1.1",
     "remark-collapse": "^0.1.2",
     "remark-toc": "^9.0.0",
@@ -41,6 +46,7 @@
     "prettier": "^3.7.4",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.51.0"
   }

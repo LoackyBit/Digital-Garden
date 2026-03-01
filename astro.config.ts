@@ -1,6 +1,8 @@
 import { defineConfig, envField, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
+import mdx from "@astrojs/mdx";
+import remarkWikiLink from "@braindb/remark-wiki-link";
 import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
 import {
@@ -15,12 +17,17 @@ import { SITE } from "./src/config";
 export default defineConfig({
   site: SITE.website,
   integrations: [
+    mdx(),
     sitemap({
       filter: page => SITE.showArchives || !page.endsWith("/archives"),
     }),
   ],
   markdown: {
-    remarkPlugins: [remarkToc, [remarkCollapse, { test: "Table of contents" }]],
+    remarkPlugins: [
+      [remarkWikiLink, { aliasDivider: "|" }],
+      remarkToc,
+      [remarkCollapse, { test: "Table of contents" }],
+    ],
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes
       themes: { light: "min-light", dark: "night-owl" },

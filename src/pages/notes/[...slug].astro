@@ -6,7 +6,7 @@ import StageTag from "@/components/StageTag.astro";
 import Layout from "@/layouts/Layout.astro";
 
 export async function getStaticPaths() {
-  const notes = await getCollection("notes", ({ data }) => !data.draft);
+  const notes = await getCollection("notes", entry => !entry.data.draft);
 
   return notes.map(note => ({
     params: { slug: note.id },
@@ -19,7 +19,7 @@ const { Content } = await render(note);
 ---
 
 <Layout
-  title={`${note.data.title} | Notes`}
+  title={`${note.data.title} | Garden`}
   description={note.data.summary ?? "Nota del Digital Garden"}
 >
   <Header />

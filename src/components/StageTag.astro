@@ -1,0 +1,38 @@
+---
+export type StageValue = "raw 🗂️" | "learning 🧩" | "fine-tuned 🧠";
+
+type Props = {
+  stage?: StageValue;
+};
+
+const { stage = "raw 🗂️" } = Astro.props;
+
+const stageStyleMap: Record<StageValue, { label: string; classes: string }> = {
+  "raw 🗂️": {
+    label: "raw 🗂️",
+    classes:
+      "border-emerald-300 bg-emerald-100/90 text-emerald-900 dark:border-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-200",
+  },
+  "learning 🧩": {
+    label: "learning 🧩",
+    classes:
+      "border-emerald-500 bg-emerald-200/90 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-800/40 dark:text-emerald-100",
+  },
+  "fine-tuned 🧠": {
+    label: "fine-tuned 🧠",
+    classes:
+      "border-emerald-700 bg-emerald-300/90 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-700/50 dark:text-emerald-50",
+  },
+};
+
+const current = stageStyleMap[stage];
+---
+
+<span
+  class:list={[
+    "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold tracking-wide",
+    current.classes,
+  ]}
+>
+  {current.label}
+</span>

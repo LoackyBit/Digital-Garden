@@ -5,24 +5,40 @@ import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Card from "@/components/Card.astro";
 import Pagination from "@/components/Pagination.astro";
-import getSortedPosts from "@/utils/getSortedPosts";
+import StageTag from "@/components/StageTag.astro";
 import { SITE } from "@/config";
 
 export const getStaticPaths = (async ({ paginate }) => {
-  const posts = await getCollection("blog", ({ data }) => !data.draft);
-  return paginate(getSortedPosts(posts), { pageSize: SITE.postPerPage });
+  const notes = await getCollection("notes", ({ data }) => !data.draft);
+  const sorted = notes.sort(
+    (left, right) => right.data.date.getTime() - left.data.date.getTime()
+  );
+
+  return paginate(sorted, { pageSize: SITE.postPerPage });
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
 ---
 
-<Layout title={`Posts | ${SITE.title}`}>
+<Layout title={`Notes | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Posts" pageDesc="All the articles I've posted.">
-    <ul>
-      {page.data.map(data => <Card {...data} />)}
+  <Main pageTitle="Notes" pageDesc="Tutte le note del Digital Garden.">
+    <ul class="grid gap-4 sm:grid-cols-2">
+      {page.data.map(note => (
+        <li class="rounded-xl border border-border p-4">
+          <div class="mb-2">
+            <StageTag stage={note.data.stage} />
+          </div>
+          <a href={`/notes/${note.id}/`} class="font-semibold hover:text-accent">
+            {note.data.title}
+          </a>
+          <p class="mt-1 text-xs text-foreground/70">
+            {note.data.date.toLocaleDateString("it-IT")}
+          </p>
+          {note.data.summary && <p class="mt-2 text-sm text-foreground/85">{note.data.summary}</p>}
+        </li>
+      ))}
     </ul>
   </Main>
 

@@ -1,0 +1,21 @@
+---
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import GraphView from "@/components/GraphView.astro";
+import Layout from "@/layouts/Layout.astro";
+---
+
+<Layout title="Graph | AstroPaper" description="Mappa visuale dei backlink del Digital Garden.">
+  <Header />
+  <main class="app-layout py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-accent">Backlink Graph</h1>
+      <p class="mt-2 text-sm text-foreground/80">
+        Esplora le connessioni tra note tramite wikilink e backlink.
+      </p>
+    </header>
+
+    <GraphView />
+  </main>
+  <Footer />
+</Layout>

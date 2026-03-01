@@ -3,119 +3,132 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
-import Card from "@/components/Card.astro";
-import getSortedPosts from "@/utils/getSortedPosts";
-import IconRss from "@/assets/icons/IconRss.svg";
+import StageTag, { type StageValue } from "@/components/StageTag.astro";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
-import { SOCIALS } from "@/constants";
 
-const posts = await getCollection("blog");
+const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort(
+  (left, right) => right.data.date.getTime() - left.data.date.getTime()
+);
 
-const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const tilEntries = (await getCollection("til", ({ data }) => !data.draft)).sort(
+  (left, right) => right.data.date.getTime() - left.data.date.getTime()
+);
+
+const stageOrder: StageValue[] = ["raw 🗂️", "learning 🧩", "fine-tuned 🧠"];
+const stageCount = Object.fromEntries(
+  stageOrder.map(stage => [stage, notes.filter(note => note.data.stage === stage).length])
+) as Record<StageValue, number>;
+
+const recentNotes = notes.slice(0, SITE.postPerIndex);
+const recentTil = tilEntries.slice(0, SITE.postPerIndex);
 ---
 
-<Layout>
+<Layout
+  title={`${SITE.title} | Digital Garden`}
+  description="Digital Garden personale con note evolutive e TIL in italiano."
+>
   <Header />
-  <main id="main-content" data-layout="index" class="app-layout">
-    <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        Mingalaba
-      </h1>
-      <a
-        target="_blank"
-        href="/rss.xml"
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
+  <main id="main-content" data-layout="index" class="app-layout py-8">
+    <section class="border-b border-border pb-8">
+      <h1 class="text-4xl font-bold text-accent sm:text-5xl">Digital Garden</h1>
+      <p class="mt-4 max-w-2xl text-foreground/85">
+        Appunti in evoluzione continua: idee grezze, concetti in apprendimento e note rifinite.
+        Niente contenuti statici da template, solo materiale del tuo percorso.
+      </p>
 
-      <p>
-        AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro
-        blog theme. This theme follows best practices and provides accessibility
-        out of the box. Light and dark mode are supported by default. Moreover,
-        additional color schemes can also be configured.
-      </p>
-      <p class="mt-2">
-        Read the blog posts or check
-        <LinkButton
-          class="underline decoration-dashed underline-offset-4 hover:text-accent"
-          href="https://github.com/satnaing/astro-paper#readme"
-        >
-          README
-        </LinkButton> for more info.
-      </p>
-      {
-        // only display if at least one social link is enabled
-        SOCIALS.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
-            <Socials />
+      <div class="mt-6 flex flex-wrap gap-3">
+        {stageOrder.map(stage => (
+          <div class="flex items-center gap-2 rounded-xl border border-border px-3 py-2">
+            <StageTag stage={stage} />
+            <span class="text-sm text-foreground/80">{stageCount[stage]} note</span>
           </div>
+        ))}
+      </div>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <LinkButton href="/garden">
+          Vai al Garden
+          <IconArrowRight class="inline-block rtl:-rotate-180" />
+        </LinkButton>
+        <LinkButton href="/til">
+          Apri TIL
+          <IconArrowRight class="inline-block rtl:-rotate-180" />
+        </LinkButton>
+        <LinkButton href="/graph">
+          Vedi Graph
+          <IconArrowRight class="inline-block rtl:-rotate-180" />
+        </LinkButton>
+      </div>
+    </section>
+
+    <section class="pt-10 pb-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-2xl font-semibold tracking-wide">Ultime note</h2>
+        <a href="/garden" class="text-sm hover:text-accent">Tutte le note</a>
+      </div>
+
+      {
+        recentNotes.length === 0 ? (
+          <p class="text-sm text-foreground/70">Nessuna nota pubblicata.</p>
+        ) : (
+          <ul class="grid gap-4 sm:grid-cols-2">
+            {recentNotes.map(note => (
+              <li class="rounded-xl border border-border p-4">
+                <div class="mb-2">
+                  <StageTag stage={note.data.stage} />
+                </div>
+                <a href={`/notes/${note.id}/`} class="font-semibold hover:text-accent">
+                  {note.data.title}
+                </a>
+                <p class="mt-1 text-xs text-foreground/70">
+                  {note.data.date.toLocaleDateString("it-IT")}
+                </p>
+                {note.data.summary && <p class="mt-2 text-sm text-foreground/85">{note.data.summary}</p>}
+              </li>
+            ))}
+          </ul>
         )
       }
     </section>
 
-    {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={[
-            "pt-12 pb-6",
-            { "border-b border-border": recentPosts.length > 0 },
-          ]}
-        >
-          <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
-          <ul>
-            {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
+    <section class="border-t border-border pt-10 pb-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-2xl font-semibold tracking-wide">Ultimi TIL</h2>
+        <a href="/til" class="text-sm hover:text-accent">Tutti i TIL</a>
+      </div>
+
+      {
+        recentTil.length === 0 ? (
+          <p class="text-sm text-foreground/70">Nessun TIL pubblicato.</p>
+        ) : (
+          <ul class="space-y-3">
+            {recentTil.map(entry => (
+              <li class="rounded-xl border border-border p-4">
+                <a href={`/til/${entry.id}/`} class="font-semibold hover:text-accent">
+                  {entry.data.title}
+                </a>
+                <p class="mt-1 text-xs text-foreground/70">
+                  {entry.data.date.toLocaleDateString("it-IT")}
+                </p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  {entry.data.tags.map(tag => (
+                    <span class="rounded-full border border-border px-2 py-0.5 text-xs">#{tag}</span>
+                  ))}
+                </div>
+              </li>
             ))}
           </ul>
-        </section>
-      )
-    }
-
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
-          </ul>
-        </section>
-      )
-    }
-
-    <div class="my-8 text-center">
-      <LinkButton href="/posts/">
-        All Posts
-        <IconArrowRight class="inline-block rtl:-rotate-180" />
-      </LinkButton>
-    </div>
+        )
+      }
+    </section>
   </main>
   <Footer />
 </Layout>
 
 <script>
   document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset?.layout;
-    if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
-    }
+    sessionStorage.setItem("backUrl", "/");
   });
 </script>

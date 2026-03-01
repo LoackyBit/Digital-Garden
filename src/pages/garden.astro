@@ -1,0 +1,66 @@
+---
+import { getCollection } from "astro:content";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import StageTag, { type StageValue } from "@/components/StageTag.astro";
+import Layout from "@/layouts/Layout.astro";
+
+const entries = (await getCollection("notes"))
+  .filter(entry => !entry.data.draft)
+  .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+
+const stageOrder: StageValue[] = ["raw 🗂️", "learning 🧩", "fine-tuned 🧠"];
+
+const groupedByStage = stageOrder.map(stage => ({
+  stage,
+  entries: entries.filter(entry => entry.data.stage === stage),
+}));
+---
+
+<Layout title="Garden | AstroPaper" description="Indice del Digital Garden per stage evolutivo.">
+  <Header />
+  <main class="app-layout py-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-accent">Digital Garden</h1>
+      <p class="mt-2 text-sm text-foreground/80">
+        Note vive e in evoluzione: da idee grezze a concetti raffinati.
+      </p>
+    </header>
+
+    <div class="space-y-10">
+      {groupedByStage.map(group => (
+        <section>
+          <div class="mb-4">
+            <StageTag stage={group.stage} />
+          </div>
+
+          {group.entries.length === 0 ? (
+            <p class="text-sm text-foreground/70">Nessuna nota in questo stage.</p>
+          ) : (
+            <ul class="grid gap-4 sm:grid-cols-2">
+              {group.entries.map(entry => (
+                <li class="rounded-xl border border-border bg-background/60 p-4 transition hover:border-accent/60">
+                  <a href={`/notes/${entry.id}/`} class="text-lg font-semibold hover:text-accent">
+                    {entry.data.title}
+                  </a>
+                  <p class="mt-1 text-xs text-foreground/70">
+                    {entry.data.date.toLocaleDateString("it-IT")}
+                  </p>
+                  {entry.data.summary && (
+                    <p class="mt-2 text-sm text-foreground/85">{entry.data.summary}</p>
+                  )}
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    {entry.data.tags.map(tag => (
+                      <span class="rounded-full border border-border px-2 py-0.5 text-xs">#{tag}</span>
+                    ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  </main>
+  <Footer />
+</Layout>

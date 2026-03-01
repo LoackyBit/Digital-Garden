@@ -1,0 +1,65 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+type Props = {
+  entries: CollectionEntry<"til">[];
+};
+
+const { entries } = Astro.props;
+
+const sortedEntries = [...entries].sort(
+  (left, right) => right.data.date.getTime() - left.data.date.getTime()
+);
+
+const groupedByPrimaryTag = sortedEntries.reduce(
+  (acc, entry) => {
+    const candidateTags = entry.data.tags.filter(tag => tag.toLowerCase() !== "til");
+    const primaryTag = candidateTags[0] ?? "generale";
+
+    if (!acc[primaryTag]) {
+      acc[primaryTag] = [];
+    }
+
+    acc[primaryTag].push(entry);
+    return acc;
+  },
+  {} as Record<string, CollectionEntry<"til">[]>
+);
+
+const orderedGroups = Object.entries(groupedByPrimaryTag).sort(([left], [right]) =>
+  left.localeCompare(right, "it")
+);
+---
+
+{
+  orderedGroups.length === 0 ? (
+    <p class="mt-4 text-sm text-foreground/80">
+      Nessun TIL pubblicato al momento.
+    </p>
+  ) : (
+    <div class="space-y-8">
+      {orderedGroups.map(([groupName, groupEntries]) => (
+        <section>
+          <h2 class="mb-4 text-2xl font-semibold capitalize text-accent">#{groupName}</h2>
+          <ul class="space-y-3">
+            {groupEntries.map(entry => (
+              <li class="rounded-xl border border-border bg-background/60 p-4 transition hover:border-accent/60">
+                <a href={`/til/${entry.id}/`} class="font-semibold hover:text-accent">
+                  {entry.data.title}
+                </a>
+                <p class="mt-1 text-xs text-foreground/70">
+                  {entry.data.date.toLocaleDateString("it-IT")}
+                </p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                  {entry.data.tags.map(tag => (
+                    <span class="rounded-full border border-border px-2 py-0.5 text-xs">#{tag}</span>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  )
+}
