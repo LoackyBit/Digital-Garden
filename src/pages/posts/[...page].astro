@@ -8,6 +8,7 @@ import Footer from "@/components/Footer.astro";
 import Pagination from "@/components/Pagination.astro";
 import StageTag from "@/components/StageTag.astro";
 import { SITE } from "@/config";
+import { withBase } from "@/utils/withBase";
 
 export const getStaticPaths = (async ({ paginate }) => {
   const notes = await getCollection("notes", ({ data }) => !data.draft);
@@ -30,7 +31,7 @@ const { page } = Astro.props;
           <div class="mb-2">
             <StageTag stage={note.data.stage} />
           </div>
-          <a href={`/notes/${note.id}/`} class="font-semibold hover:text-accent">
+          <a href={withBase(`/notes/${note.id}/`)} class="font-semibold hover:text-accent">
             {note.data.title}
           </a>
           <p class="mt-1 text-xs text-foreground/70">

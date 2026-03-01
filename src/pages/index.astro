@@ -7,6 +7,7 @@ import LinkButton from "@/components/LinkButton.astro";
 import StageTag, { type StageValue } from "@/components/StageTag.astro";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
+import { withBase } from "@/utils/withBase";
 
 const notes = (await getCollection("notes", ({ data }) => !data.draft)).sort(
   (left, right) => right.data.date.getTime() - left.data.date.getTime()
@@ -48,15 +49,15 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
       </div>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <LinkButton href="/garden">
+        <LinkButton href={withBase("/garden")}>
           Vai al Garden
           <IconArrowRight class="inline-block rtl:-rotate-180" />
         </LinkButton>
-        <LinkButton href="/til">
+        <LinkButton href={withBase("/til")}>
           Apri TIL
           <IconArrowRight class="inline-block rtl:-rotate-180" />
         </LinkButton>
-        <LinkButton href="/graph">
+        <LinkButton href={withBase("/graph")}>
           Vedi Graph
           <IconArrowRight class="inline-block rtl:-rotate-180" />
         </LinkButton>
@@ -66,7 +67,7 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
     <section class="pt-10 pb-6">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-2xl font-semibold tracking-wide">Ultime note</h2>
-        <a href="/garden" class="text-sm hover:text-accent">Tutte le note</a>
+        <a href={withBase("/garden")} class="text-sm hover:text-accent">Tutte le note</a>
       </div>
 
       {
@@ -79,7 +80,7 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
                 <div class="mb-2">
                   <StageTag stage={note.data.stage} />
                 </div>
-                <a href={`/notes/${note.id}/`} class="font-semibold hover:text-accent">
+                <a href={withBase(`/notes/${note.id}/`)} class="font-semibold hover:text-accent">
                   {note.data.title}
                 </a>
                 <p class="mt-1 text-xs text-foreground/70">
@@ -96,7 +97,7 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
     <section class="border-t border-border pt-10 pb-6">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-2xl font-semibold tracking-wide">Ultimi TIL</h2>
-        <a href="/til" class="text-sm hover:text-accent">Tutti i TIL</a>
+        <a href={withBase("/til")} class="text-sm hover:text-accent">Tutti i TIL</a>
       </div>
 
       {
@@ -106,7 +107,7 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
           <ul class="space-y-3">
             {recentTil.map(entry => (
               <li class="rounded-xl border border-border p-4">
-                <a href={`/til/${entry.id}/`} class="font-semibold hover:text-accent">
+                <a href={withBase(`/til/${entry.id}/`)} class="font-semibold hover:text-accent">
                   {entry.data.title}
                 </a>
                 <p class="mt-1 text-xs text-foreground/70">
@@ -129,6 +130,6 @@ const recentTil = tilEntries.slice(0, SITE.postPerIndex);
 
 <script>
   document.addEventListener("astro:page-load", () => {
-    sessionStorage.setItem("backUrl", "/");
+    sessionStorage.setItem("backUrl", import.meta.env.BASE_URL ?? "/");
   });
 </script>

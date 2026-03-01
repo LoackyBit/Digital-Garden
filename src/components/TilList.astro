@@ -1,5 +1,6 @@
 ---
 import type { CollectionEntry } from "astro:content";
+import { withBase } from "@/utils/withBase";
 
 type Props = {
   entries: CollectionEntry<"til">[];
@@ -44,7 +45,7 @@ const orderedGroups = Object.entries(groupedByPrimaryTag).sort(([left], [right])
           <ul class="space-y-3">
             {groupEntries.map(entry => (
               <li class="rounded-xl border border-border bg-background/60 p-4 transition hover:border-accent/60">
-                <a href={`/til/${entry.id}/`} class="font-semibold hover:text-accent">
+                <a href={withBase(`/til/${entry.id}/`)} class="font-semibold hover:text-accent">
                   {entry.data.title}
                 </a>
                 <p class="mt-1 text-xs text-foreground/70">

@@ -4,6 +4,7 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import StageTag, { type StageValue } from "@/components/StageTag.astro";
 import Layout from "@/layouts/Layout.astro";
+import { withBase } from "@/utils/withBase";
 
 const entries = (await getCollection("notes"))
   .filter(entry => !entry.data.draft)
@@ -40,7 +41,7 @@ const groupedByStage = stageOrder.map(stage => ({
             <ul class="grid gap-4 sm:grid-cols-2">
               {group.entries.map(entry => (
                 <li class="rounded-xl border border-border bg-background/60 p-4 transition hover:border-accent/60">
-                  <a href={`/notes/${entry.id}/`} class="text-lg font-semibold hover:text-accent">
+                  <a href={withBase(`/notes/${entry.id}/`)} class="text-lg font-semibold hover:text-accent">
                     {entry.data.title}
                   </a>
                   <p class="mt-1 text-xs text-foreground/70">

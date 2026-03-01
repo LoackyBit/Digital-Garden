@@ -1,5 +1,7 @@
 ---
-const { dataUrl = "/graph/backlinks.json" } = Astro.props as {
+import { withBase } from "@/utils/withBase";
+
+const { dataUrl = withBase("/graph/backlinks.json") } = Astro.props as {
   dataUrl?: string;
 };
 ---
@@ -15,6 +17,7 @@ const { dataUrl = "/graph/backlinks.json" } = Astro.props as {
   <div
     id="graph-view-root"
     data-graph-url={dataUrl}
+    data-base-url={import.meta.env.BASE_URL ?? "/"}
     class="h-[70svh] min-h-[420px] w-full rounded-xl border border-border"
   />
 </section>
@@ -40,9 +43,38 @@ const { dataUrl = "/graph/backlinks.json" } = Astro.props as {
         return;
       }
 
-      const graphUrl = root.getAttribute("data-graph-url") ?? "/graph/backlinks.json";
+      const graphUrl =
+        root.getAttribute("data-graph-url") ??
+        root.getAttribute("data-base-url") + "graph/backlinks.json";
       const response = await fetch(graphUrl);
       const graphData = await response.json();
+
+      const toBaseUrl = url => {
+        if (!url || typeof url !== "string") {
+          return url;
+        }
+
+        if (/^https?:\/\//.test(url)) {
+          return url;
+        }
+
+        const baseUrl = root.getAttribute("data-base-url") ?? "/";
+        const normalizedBase =
+          baseUrl !== "/" && baseUrl.endsWith("/")
+            ? baseUrl.slice(0, -1)
+            : baseUrl;
+        const normalizedPath = url.startsWith("/") ? url : `/${url}`;
+
+        if (
+          normalizedBase === "/" ||
+          normalizedPath === normalizedBase ||
+          normalizedPath.startsWith(`${normalizedBase}/`)
+        ) {
+          return normalizedPath;
+        }
+
+        return `${normalizedBase}${normalizedPath}`;
+      };
 
       const width = root.clientWidth;
       const height = root.clientHeight;
@@ -76,7 +108,7 @@ const { dataUrl = "/graph/backlinks.json" } = Astro.props as {
         .style("cursor", "pointer")
         .on("click", (_, d) => {
           if (d.url) {
-            window.location.href = d.url;
+            window.location.href = toBaseUrl(d.url);
           }
         });
 

@@ -6,12 +6,36 @@ import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
 import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
+import { withBase } from "@/utils/withBase";
 
 const { pathname } = Astro.url;
+const baseUrl = import.meta.env.BASE_URL ?? "/";
+const normalizedBase =
+  baseUrl !== "/" && baseUrl.endsWith("/")
+    ? baseUrl.slice(0, -1)
+    : baseUrl;
+
+const stripBasePath = (path: string): string => {
+  if (normalizedBase === "/") {
+    return path;
+  }
+
+  if (path === normalizedBase) {
+    return "/";
+  }
+
+  if (path.startsWith(`${normalizedBase}/`)) {
+    return path.slice(normalizedBase.length);
+  }
+
+  return path;
+};
 
 // Remove trailing slash from current pathname if exists
 const currentPath =
-  pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+  stripBasePath(pathname).endsWith("/") && stripBasePath(pathname) !== "/"
+    ? stripBasePath(pathname).slice(0, -1)
+    : stripBasePath(pathname);
 
 const isActive = (path: string) => {
   const currentPathArray = currentPath.split("/").filter(p => p.trim());
@@ -42,7 +66,7 @@ const isActive = (path: string) => {
     ]}
   >
     <a
-      href="/"
+      href={withBase("/")}
       class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none"
     >
       {SITE.title}
@@ -71,28 +95,28 @@ const isActive = (path: string) => {
         ]}
       >
         <li class="col-span-2">
-          <a href="/garden" class:list={{ "active-nav": isActive("/garden") }}>
+          <a href={withBase("/garden")} class:list={{ "active-nav": isActive("/garden") }}>
             Garden
           </a>
         </li>
         <li class="col-span-2">
-          <a href="/til" class:list={{ "active-nav": isActive("/til") }}>
+          <a href={withBase("/til")} class:list={{ "active-nav": isActive("/til") }}>
             TIL
           </a>
         </li>
         <li class="col-span-2">
-          <a href="/graph" class:list={{ "active-nav": isActive("/graph") }}>
+          <a href={withBase("/graph")} class:list={{ "active-nav": isActive("/graph") }}>
             Graph
           </a>
         </li>
         <li class="col-span-2">
-          <a href="/about" class:list={{ "active-nav": isActive("/about") }}>
+          <a href={withBase("/about")} class:list={{ "active-nav": isActive("/about") }}>
             About
           </a>
         </li>
         <li class="col-span-1 flex items-center justify-center">
           <LinkButton
-            href="/search"
+            href={withBase("/search")}
             class:list={[
               "focus-outline flex p-3 sm:p-1",
               { "[&>svg]:stroke-accent": isActive("/search") },
