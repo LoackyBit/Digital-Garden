@@ -15,8 +15,8 @@ import { SITE } from "./src/config";
 
 // https://astro.build/config
 export default defineConfig({
-  site: SITE.website,
-  base: "/digital-garden/",
+  site: "https://loackybit.github.io/Digital-Garden",
+  base: "/Digital-Garden/",
   integrations: [
     mdx(),
     sitemap({
