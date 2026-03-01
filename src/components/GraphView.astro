@@ -31,150 +31,190 @@ const { dataUrl = withBase("/graph/backlinks.json") } = Astro.props as {
     "fine-tuned 🧠": "#047857",
   };
 
-  const root = document.getElementById("graph-view-root");
+  const getRoot = () => document.getElementById("graph-view-root");
 
-  if (root) {
-    const renderGraph = async () => {
-      const d3 = window.d3;
+  const renderGraph = async root => {
+    const d3 = window.d3;
 
-      if (!d3) {
-        root.innerHTML =
-          '<p style="padding:1rem;color:var(--foreground)">D3 non disponibile.</p>';
-        return;
+    if (!d3) {
+      root.innerHTML =
+        '<p style="padding:1rem;color:var(--foreground)">D3 non disponibile.</p>';
+      return;
+    }
+
+    // Prevent duplicated SVGs when the page is re-initialized after client-side navigation.
+    root.innerHTML = "";
+
+    const graphUrl =
+      root.getAttribute("data-graph-url") ??
+      root.getAttribute("data-base-url") + "graph/backlinks.json";
+    const response = await fetch(graphUrl);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} while loading ${graphUrl}`);
+    }
+
+    const graphData = await response.json();
+
+    if (!Array.isArray(graphData?.nodes) || !Array.isArray(graphData?.links)) {
+      throw new Error("Formato backlinks.json non valido: attesi array 'nodes' e 'links'.");
+    }
+
+    const nodes = graphData.nodes
+      .filter(node => node && typeof node.id === "string")
+      .map(node => ({ ...node }));
+
+    const nodeIds = new Set(nodes.map(node => node.id));
+    const links = graphData.links
+      .filter(link => link && typeof link.source === "string" && typeof link.target === "string")
+      .filter(link => nodeIds.has(link.source) && nodeIds.has(link.target))
+      .map(link => ({ ...link }));
+
+    if (!nodes.length) {
+      throw new Error("Nessun nodo valido trovato nel dataset del grafo.");
+    }
+
+    const toBaseUrl = url => {
+      if (!url || typeof url !== "string") {
+        return url;
       }
 
-      const graphUrl =
-        root.getAttribute("data-graph-url") ??
-        root.getAttribute("data-base-url") + "graph/backlinks.json";
-      const response = await fetch(graphUrl);
-      const graphData = await response.json();
+      if (/^https?:\/\//.test(url)) {
+        return url;
+      }
 
-      const toBaseUrl = url => {
-        if (!url || typeof url !== "string") {
-          return url;
-        }
+      const baseUrl = root.getAttribute("data-base-url") ?? "/";
+      const normalizedBase =
+        baseUrl !== "/" && baseUrl.endsWith("/")
+          ? baseUrl.slice(0, -1)
+          : baseUrl;
+      const normalizedPath = url.startsWith("/") ? url : `/${url}`;
 
-        if (/^https?:\/\//.test(url)) {
-          return url;
-        }
+      if (
+        normalizedBase === "/" ||
+        normalizedPath === normalizedBase ||
+        normalizedPath.startsWith(`${normalizedBase}/`)
+      ) {
+        return normalizedPath;
+      }
 
-        const baseUrl = root.getAttribute("data-base-url") ?? "/";
-        const normalizedBase =
-          baseUrl !== "/" && baseUrl.endsWith("/")
-            ? baseUrl.slice(0, -1)
-            : baseUrl;
-        const normalizedPath = url.startsWith("/") ? url : `/${url}`;
-
-        if (
-          normalizedBase === "/" ||
-          normalizedPath === normalizedBase ||
-          normalizedPath.startsWith(`${normalizedBase}/`)
-        ) {
-          return normalizedPath;
-        }
-
-        return `${normalizedBase}${normalizedPath}`;
-      };
-
-      const width = root.clientWidth;
-      const height = root.clientHeight;
-
-      const svg = d3
-        .select(root)
-        .append("svg")
-        .attr("viewBox", `0 0 ${width} ${height}`)
-        .attr("width", width)
-        .attr("height", height)
-        .style("background", "var(--background)");
-
-      const link = svg
-        .append("g")
-        .attr("stroke", "var(--muted)")
-        .attr("stroke-opacity", 0.6)
-        .selectAll("line")
-        .data(graphData.links)
-        .join("line")
-        .attr("stroke-width", 1.5);
-
-      const node = svg
-        .append("g")
-        .selectAll("circle")
-        .data(graphData.nodes)
-        .join("circle")
-        .attr("r", 8)
-        .attr("fill", d => stageColor[d.stage ?? "raw 🗂️"] ?? stageColor["raw 🗂️"])
-        .attr("stroke", "var(--border)")
-        .attr("stroke-width", 1.5)
-        .style("cursor", "pointer")
-        .on("click", (_, d) => {
-          if (d.url) {
-            window.location.href = toBaseUrl(d.url);
-          }
-        });
-
-      const label = svg
-        .append("g")
-        .selectAll("text")
-        .data(graphData.nodes)
-        .join("text")
-        .text(d => d.title)
-        .attr("font-size", 11)
-        .attr("fill", "var(--foreground)")
-        .attr("dx", 12)
-        .attr("dy", 4)
-        .style("pointer-events", "none");
-
-      const simulation = d3
-        .forceSimulation(graphData.nodes)
-        .force(
-          "link",
-          d3
-            .forceLink(graphData.links)
-            .id(d => d.id)
-            .distance(80)
-        )
-        .force("charge", d3.forceManyBody().strength(-160))
-        .force("center", d3.forceCenter(width / 2, height / 2));
-
-      const drag = d3
-        .drag()
-        .on("start", (event, d) => {
-          if (!event.active) {
-            simulation.alphaTarget(0.2).restart();
-          }
-          d.fx = d.x;
-          d.fy = d.y;
-        })
-        .on("drag", (event, d) => {
-          d.fx = event.x;
-          d.fy = event.y;
-        })
-        .on("end", (event, d) => {
-          if (!event.active) {
-            simulation.alphaTarget(0);
-          }
-          d.fx = null;
-          d.fy = null;
-        });
-
-      node.call(drag);
-
-      simulation.on("tick", () => {
-        link
-          .attr("x1", d => d.source.x ?? 0)
-          .attr("y1", d => d.source.y ?? 0)
-          .attr("x2", d => d.target.x ?? 0)
-          .attr("y2", d => d.target.y ?? 0);
-
-        node.attr("cx", d => d.x ?? 0).attr("cy", d => d.y ?? 0);
-
-        label.attr("x", d => d.x ?? 0).attr("y", d => d.y ?? 0);
-      });
+      return `${normalizedBase}${normalizedPath}`;
     };
 
-    renderGraph().catch(error => {
+    const width = root.clientWidth;
+    const height = root.clientHeight;
+
+    const svg = d3
+      .select(root)
+      .append("svg")
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("width", width)
+      .attr("height", height)
+      .style("background", "var(--background)");
+
+    const link = svg
+      .append("g")
+      .attr("stroke", "var(--muted)")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", 1.5);
+
+    const node = svg
+      .append("g")
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("r", 8)
+      .attr("fill", d => stageColor[d.stage ?? "raw 🗂️"] ?? stageColor["raw 🗂️"])
+      .attr("stroke", "var(--border)")
+      .attr("stroke-width", 1.5)
+      .style("cursor", "pointer")
+      .on("click", (_, d) => {
+        if (d.url) {
+          window.location.href = toBaseUrl(d.url);
+        }
+      });
+
+    const label = svg
+      .append("g")
+      .selectAll("text")
+      .data(nodes)
+      .join("text")
+      .text(d => d.title)
+      .attr("font-size", 11)
+      .attr("fill", "var(--foreground)")
+      .attr("dx", 12)
+      .attr("dy", 4)
+      .style("pointer-events", "none");
+
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force(
+        "link",
+        d3
+          .forceLink(links)
+          .id(d => d.id)
+          .distance(80)
+      )
+      .force("charge", d3.forceManyBody().strength(-160))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    const drag = d3
+      .drag()
+      .on("start", (event, d) => {
+        if (!event.active) {
+          simulation.alphaTarget(0.2).restart();
+        }
+        d.fx = d.x;
+        d.fy = d.y;
+      })
+      .on("drag", (event, d) => {
+        d.fx = event.x;
+        d.fy = event.y;
+      })
+      .on("end", (event, d) => {
+        if (!event.active) {
+          simulation.alphaTarget(0);
+        }
+        d.fx = null;
+        d.fy = null;
+      });
+
+    node.call(drag);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x ?? 0)
+        .attr("y1", d => d.source.y ?? 0)
+        .attr("x2", d => d.target.x ?? 0)
+        .attr("y2", d => d.target.y ?? 0);
+
+      node.attr("cx", d => d.x ?? 0).attr("cy", d => d.y ?? 0);
+
+      label.attr("x", d => d.x ?? 0).attr("y", d => d.y ?? 0);
+    });
+  };
+
+  const initGraphView = () => {
+    const root = getRoot();
+
+    if (!root) {
+      return;
+    }
+
+    renderGraph(root).catch(error => {
       root.innerHTML =
         `<p style="padding:1rem;color:var(--foreground)">Impossibile caricare il grafo backlink. ${String(error)}</p>`;
     });
+  };
+
+  document.addEventListener("astro:page-load", initGraphView);
+
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    initGraphView();
+  } else {
+    document.addEventListener("DOMContentLoaded", initGraphView, { once: true });
   }
 </script>
