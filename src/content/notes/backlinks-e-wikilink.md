@@ -5,7 +5,7 @@ tags: ["knowledge-management", "wikilink"]
 stage: "fine-tuned 🧠"
 source: ["https://github.com/stereobooster/braindb"]
 summary: "Come i wikilink trasformano note isolate in un grafo di conoscenza navigabile."
-draft: false
+draft: true
 ---
 
 ## Concetto
